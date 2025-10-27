@@ -86,5 +86,46 @@ class MRTD:
         '''
         return True
 
-    def report_mismatch():
-        pass
+    def report_mismatch(passport_number, date_of_birth, expiration_date, personal_number, check_digit_1, check_digit_2, check_digit_3, check_digit_4):
+        '''
+        This function reports if the check digits in string 2 of the MRZ are wrong
+        Input: string passport_number, string date_of_birth, string expiration_date, string personal_number, int check_digit_1, int check_digit_2, int check_digit_3, int check_digit_4
+        Output: A string showing if the check digits mismatched or not
+        '''
+        # calculate the check digits
+        passport_number_adler_checksum = MRTD.adler_32(passport_number) % 10 
+        date_of_birth__adler_checksum = MRTD.adler_32(date_of_birth) % 10
+        expiration_date_adler_checksum = MRTD.adler_32(expiration_date) % 10
+        personal_number_adler_checksum = MRTD.adler_32(personal_number) % 10
+
+        if check_digit_1 != passport_number_adler_checksum:
+            print("Error: Passport number checkdigit does not match.\n")
+        else:
+            print("Passport number checkdigit matches.\n")
+        if check_digit_2 != date_of_birth__adler_checksum:
+            print("Error: Date of birth checkdigit does not match.\n")
+        else:
+            print("Date of birth checkdigit matches.\n")
+        if check_digit_3 != expiration_date_adler_checksum:
+            print("Error: Expiration date checkdigit does not match.\n")
+        else:
+            print("Expiration date checkdigit matches.\n")
+        if check_digit_4 != personal_number_adler_checksum:
+            print("Error: Personal number checkdigit does not match.\n")
+        else:
+            print("Personal number checkdigit matches.\n")
+            return 
+
+    def adler_32(data):
+        '''
+        This function utilizes the Adler-32 algorithm to produce a checksum.
+        Input: a string of data
+        Output: the checksum calculated for that string
+        '''
+        a = 1 # sum of all bytes 
+        b = 0 # sum of all values from A 
+        length = len(data)
+        for i in range(0, length):
+            a = (a + ord(data[i])) % 65521
+            b = (b + a) % 65521
+        return (b << 16) | a 
