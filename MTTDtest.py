@@ -83,7 +83,43 @@ class TestMRTD(unittest.TestCase):
         self.assertTrue(True)
 
     def test_report_mismatch(self):
-        pass
+        '''test check digit mismatch reporting'''
+        passport_number = "L898902C3"
+        date_of_birth = "UTO740812"
+        expiration_date = "F120415"
+        personal_number = "ZE184226B"
+        check_digit_1 = 7 
+        check_digit_2 = 1
+        check_digit_3 = 2 
+        check_digit_4 = 1
+        MRTD.report_mismatch(passport_number, date_of_birth, expiration_date, personal_number, check_digit_1, check_digit_2, check_digit_3, check_digit_4)
+
+    def test_adler_32(self):
+        '''test adler32 algorithm'''
+        data1 = "L898902C3"
+        data2 = "UTO740812"
+        data3 = "F120415"
+        data4 = "ZE184226B"
+        ans1 = MRTD.adler_32(data1)
+        ans2 = MRTD.adler_32(data2)
+        ans3 = MRTD.adler_32(data3)
+        ans4 = MRTD.adler_32(data4)
+
+        # Find the check digits by using modulo 10 on each checksum we get from the function
+        # x = ans1 % 10
+        # print("Check digit 1: " + str(x))
+        # y = ans2 % 10
+        # print("Check digit 2: " + str(y))
+        # z = ans3 % 10
+        # print("Check digit 3: " + str(z))
+        # a = ans4 % 10
+        # print("Check digit 4: " + str(a))
+
+        # check the resultsfrom the function
+        self.assertEqual(ans1, 176161287) 
+        self.assertEqual(ans2, 202965551)
+        self.assertEqual(ans3, 100925812)
+        self.assertEqual(ans4, 185729561)
 
 if __name__ == '__main__':
     unittest.main()
