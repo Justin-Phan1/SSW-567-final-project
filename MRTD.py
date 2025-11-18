@@ -8,7 +8,7 @@ class MRTD:
         '''
         return True
 
-    def decode_mrz_data(self, str1, str2):
+    def decode_mrz_data(str1, str2):
         '''The system shall be able to separate the two strings obtained from the MRZ into these categories: passport type, issuing country, name of the passport holder, passport number, country code, birth date, gender, expiration date, personal number, and the check digits in between the second line of the MRZ. 
         
         Expected Format:
@@ -83,26 +83,7 @@ class MRTD:
         '''
         The system shall be able to encode travel document information fields queried from a database into the 
         two strings for the MRZ in a travel document. Empty function is defined since we are not required to implement this function.
-        '''
-        def calculate_check_digit(data):
-            '''Calculate check digit for MRZ fields using modulo 10 algorithm'''
-            weights = [7, 3, 1]
-            char_values = {
-                '<': 0, '0': 0, '1': 1, '2': 2, '3': 3, '4': 4,
-                '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
-                'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15,
-                'G': 16, 'H': 17, 'I': 18, 'J': 19, 'K': 20, 'L': 21,
-                'M': 22, 'N': 23, 'O': 24, 'P': 25, 'Q': 26, 'R': 27,
-                'S': 28, 'T': 29, 'U': 30, 'V': 31, 'W': 32, 'X': 33,
-                'Y': 34, 'Z': 35
-            }
-            
-            total = 0
-            for i, char in enumerate(data):
-                total += char_values.get(char.upper(), 0) * weights[i % 3]
-            
-            return str(total % 10)
-        
+        '''        
         # Extract data from record
         line1_data = record["line1"]
         line2_data = record["line2"]
@@ -121,31 +102,30 @@ class MRTD:
         
         # Build Line 2: [PassportNum][CD1][Country][DOB][CD2][Sex][Exp][CD3][PersonalNum][CD4][FinalCD]
         passport_number = line2_data["passport_number"].ljust(9, '<')
-        cd1 = calculate_check_digit(passport_number)
+        cd1 = MRTD.adler_32(passport_number) % 10
         
         country_code = line2_data["country_code"]
         birth_date = line2_data["birth_date"]
-        cd2 = calculate_check_digit(birth_date)
+        cd2 = MRTD.adler_32(birth_date) % 10 
         
         sex = line2_data["sex"]
         expiration_date = line2_data["expiration_date"]
-        cd3 = calculate_check_digit(expiration_date)
+        cd3 = MRTD.adler_32(expiration_date) % 10
         
         personal_number = line2_data["personal_number"].ljust(15, '<')
-        cd4 = calculate_check_digit(personal_number)
+        cd4 = MRTD.adler_32(personal_number) % 10
         
         # Calculate final check digit (CD5) over specific fields
-        final_check_data = passport_number + cd1 + birth_date + cd2 + expiration_date + cd3 + personal_number + cd4
-        cd5 = calculate_check_digit(final_check_data)
+        final_check_data = passport_number + str(cd1) + birth_date + str(cd2) + expiration_date + str(cd3) + personal_number + str(cd4)
+        cd5 = MRTD.adler_32(final_check_data) % 10
         
         # Line 2 construction
-        line2 = (passport_number + cd1 + country_code + birth_date + cd2 + 
-                sex + expiration_date + cd3 + personal_number + cd4) 
+        line2 = (passport_number + str(cd1) + country_code + birth_date + str(cd2) + 
+                sex + expiration_date + str(cd3) + personal_number + str(cd4))
                 # "<<<<<<" + cd5)
         
         # Return combined MRZ string
         return f"{line1};{line2}"
-
 
     def report_mismatch(passport_number, date_of_birth, expiration_date, personal_number, check_digit_1, check_digit_2, check_digit_3, check_digit_4):
         '''
